@@ -1,0 +1,19 @@
+[project]
+name = "cdrmcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "a2a-sdk>=0.3.8",
+    "aiohttp>=3.13.0",
+    "fastapi>=0.118.2",
+    "fastmcp>=2.12.4",
+    "mcp[cli]>=1.16.0",
+    "uvicorn>=0.37.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.0",
+]
