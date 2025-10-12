@@ -37,31 +37,4 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-""""
- # Register a new AgentCard
-        new_card = {
-        "name": "PlannerAgent",
-        "description": "Uses Ollama to create structured plans",
-        "url": "http://localhost:9002/",
-        "defaultInputModes": ["text"],
-        "defaultOutputModes": ["text"],
-        "skills": [
-            {
-                "id": "planning",
-                "name": "Planning",
-                "description": "Turn research into a step-by-step plan",
-                "tags": ["planning", "strategy"],
-                "examples": ["Make an experiment plan", "Outline next steps"]
-            }
-        ],
-        "version": "1.0.0",
-        "capabilities": {}
-        }
-
-        result = await client.call_tool("register_agent", {"card": new_card})
-        print("Register result:", result)
-        
-        # Deregister the AgentCard
-        # dereg_result = await client.call_tool("deregister_agent", {"name": "PlannerAgent"})
-        # print("Deregister result:", dereg_result)
-"""
+ 

@@ -73,6 +73,41 @@ def save_registry(reg: dict[str, AgentCard]) -> None:
 mcp = FastMCP("AgentCardServer")
 
 # ---------------- Resources ----------------
+def add_agent_resource(card: AgentCard):
+    """Register one AgentCard as a resource."""
+    uri = f"agent://{card['name']}"
+
+    def reader() -> dict:
+        return card
+
+    # Build a Resource object and add it
+    mcp.add_resource_fn(
+        reader,
+        uri,
+        name=card["name"],
+        description=card.get("description", ""),
+        mime_type="application/json",
+        tags={"public"},
+    )
+
+    logger.info(f"Added resource {uri}")
+
+def remove_agent_resource(uri: str):
+    """Forcefully remove a resource from FastMCP."""
+    res = mcp._resource_manager.get_resource(uri)
+    if res:
+        try:
+            res.close()
+        except Exception as e:
+            logger.warning(f"Error closing resource {uri}: {e}")
+    try:
+        mcp._resource_manager._resources.pop(uri, None)
+    except Exception as e:
+        logger.warning(f"Error removing resource {uri} from manager: {e}")
+        raise   # bubble up so the tool call fails
+
+    logger.info(f"Removed resource {uri}")
+
 @mcp.resource("agent://{name}", tags={"public"}, mime_type="application/json")
 def get_agent_card(name: str) -> dict:
     """Return the AgentCard JSON for a given agent name.
@@ -91,27 +126,11 @@ def get_agent_card(name: str) -> dict:
         raise ValueError(f"Unknown agent {name}")
     return reg[name]
 
-def register_agent_resources():
+def sync_registry_to_resources():
+    """At startup, register all persisted AgentCards."""
     reg = load_registry()
-    if reg is None:
-        return
-    for name, card in reg.items():
-        def make_reader(card_data):
-            def reader() -> dict:
-                return card_data
-            return reader
-
-        mcp.add_resource_fn(
-            make_reader(card),
-            f"agent://{name}",
-            name=name,
-            description=card.get("description", ""),
-            mime_type="application/json",
-            tags={"public"},
-        )
-
-# Call once at startup
-register_agent_resources()
+    for card in reg.values():
+        add_agent_resource(card)
 
 # ---------------- Tools ----------------
 @mcp.tool()
@@ -134,6 +153,9 @@ def register_agent(card: dict) -> str:
         reg = load_registry()
         reg[card["name"]] = card
         save_registry(reg)
+        
+        """Register one AgentCard as a resource."""
+        add_agent_resource(card)
 
         logger.info(f"Registered agent: {card['name']}")
         return f"Registered {card['name']}"
@@ -156,9 +178,9 @@ def deregister_agent(name: str) -> str:
         if name in reg:
             reg.pop(name)
             save_registry(reg)
-            # uri = f"agent://{name}"
-            #if uri in mcp.resources:
-            #    del mcp.resources[uri]
+            uri = f"agent://{name}"
+            remove_agent_resource(uri)
+            
             logger.info(f"Deregistered agent: {name}")
             return f"Deregistered {name}"
 
@@ -170,6 +192,7 @@ def deregister_agent(name: str) -> str:
 
 # ---------------- Run ----------------
 if __name__ == "__main__":
+    sync_registry_to_resources()
     mcp.run(
         transport="http",   # spec‑aligned Streamable HTTP transport
         host="127.0.0.1",
