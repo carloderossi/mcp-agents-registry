@@ -9,7 +9,10 @@ This script demonstrates the full lifecycle of AgentCard management via MCP:
 
 The script showcases how to use MCP tools to manage agent resources at runtime,
 allowing dynamic addition and removal of agents without server restart.
+<<<<<<< HEAD
 This is used as an Eval for this small demo.
+=======
+>>>>>>> d8b65ee7415333d2db53b27a1a088a80f500e333
 
 Usage:
     python mini_mcp_client.py
